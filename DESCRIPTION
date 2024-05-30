@@ -1,0 +1,22 @@
+Package: yamlsheets
+Title: Create Spreadsheet Publications Following Best Practice
+Version: 0.0.0.9000
+Authors@R: 
+    person("Matt", "Dray", , "mwdray@gmail.com", role = c("aut", "cre"))
+Description: Generate spreadsheet publications that follow best-practice
+    guidance from the UK government's Analysis Function Central Team, using a
+    YAML 'blueprint' as the primary input.
+License: MIT + file LICENSE
+URL: https://github.com/co-analysis/yamlsheets
+BugReports: https://github.com/co-analysis/yamlsheets/issues
+Imports: 
+    cli,
+    fs,
+    openxlsx2,
+    yaml
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.1
+Depends: 
+    R (>= 2.10)

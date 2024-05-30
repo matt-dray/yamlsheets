@@ -1,0 +1,32 @@
+cover:
+  sheet_title: Widget production in England, season 2023/2024  # mandatory main sheet title in cell A1
+  "About this publication":
+    - This publication is about the quantity of widgets.  # arbitrary section in form 'section header: text content'
+    - This is a second row of information.
+  "Period covered":
+    - The time period covered by this publication is quarter 3, 2023.
+  Contact:
+    - You can contact the team via email.
+    - "[example@example.com](mailto:example@example.com)"   # arbitrary section, use Markdown to indicate a link
+contents:
+  sheet_title: Contents
+  links: true  # whether to add a column with links to each tab
+notes:
+  sheet_title: Notes  # mandatory expected
+  table: "[Insert notes table later]"  # mandatory expected
+table_1:
+  sheet_title: "Table 1: Widget quantity"  # mandatory expected
+  source: The UK Widget Survey.  # optional expected
+  blanks: Blank cells indicate that data is missing.  # optional arbitrary
+  coverage: The data are for the North and South of England  # optional arbitrary
+  table: !expr read.csv(system.file("extdata", "widgets.csv", package = "yamlsheets"))  # mandatory expected
+table_2:
+  sheet_title: "Tables 2a and 2b: Widget quantity by geography"
+  source: The UK Widget Survey.
+  tables:
+    table_2a:
+      table_title: "Table 2a: Widget quantity produced in the North of England"
+      table: !expr read.csv(system.file("extdata", "widgets_north.csv", package = "yamlsheets"))
+    table_2b:
+      table_title: "Table 2b: Widget quantity produced in the South of England"
+      table: !expr read.csv(system.file("extdata", "widgets_south.csv", package = "yamlsheets"))

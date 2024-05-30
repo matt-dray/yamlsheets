@@ -1,0 +1,134 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%",
+  eval = FALSE
+)
+```
+
+# yamlsheets
+
+<!-- badges: start -->
+[![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
+<!-- badges: end -->
+
+Generate spreadsheet publications that follow [best-practice guidance from the UK government's Analysis Function](https://analysisfunction.civilservice.gov.uk/policy-store/releasing-statistics-in-spreadsheets/), using a [YAML](https://yaml.org/) text file 'blueprint' as the input.
+
+This package is a work-in-progress concept and may never be completed or even reach a useful state.
+
+## Install
+
+Install from R Universe:
+
+```{r}
+#| label: install-r-universe
+install.packages("yamlsheets", repos = "https://matt-dray.r-universe.dev")
+```
+
+Or from GitHub via {remotes}:
+
+```{r}
+#| label: install-github
+remotes::install_github("matt-dray/yamlsheets")
+```
+
+## Approach
+
+Information and data to construct a spreadsheet are stored in a particularly-formatted YAML text file, called a 'blueprint'. There's a demo blueprint provided in the package:
+
+```{r}
+#| label: demo-yaml-file
+#| eval: true
+filepath <- system.file("extdata", "widgets.yaml", package = "yamlsheets")
+```
+
+You can view the structure of this demo file by reading manually with `yaml::read_yaml(filepath, eval.expr = TRUE)`.
+
+<details><summary>Click to read an aside about executing R code in a YAML file.</summary>
+
+Note that you can pass data into the YAML file on read by pre-pending `!expr` to R code that will be executed on-read with the argument `eval.expr = TRUE`.
+
+You can choose to do this using the `eval.expr` argument in `yaml::read_yaml()`:
+
+```{r}
+#| label: demo-yaml-read
+#| eval: true
+yaml_raw <- yaml::read_yaml(filepath, eval.expr = FALSE)
+yaml_evaluated <- yaml::read_yaml(filepath, eval.expr = TRUE)
+```
+
+Here you can see the raw, unevaluated R code in the YAML:
+
+```{r}
+#| label: demo-yaml-raw
+#| eval: true
+yaml_raw$table_1$table
+```
+
+And here you can see it's been evaluated and the data from the CSV file has been read in:
+
+```{r}
+#| label: demo-yaml-executed
+#| eval: true
+yaml_evaluated$table_1$table
+```
+
+</details>
+
+Read the blueprint  into a list:
+
+```{r}
+#| label: demo-read-blueprint
+#| eval: true
+blueprint <- yamlsheets::read_blueprint(filepath)
+str(blueprint, 1)
+```
+
+<details><summary>Click to see the full blueprint structure.</summary>
+
+```{r}
+#| label: demo-blueprint-full
+#| eval: true
+str(blueprint)
+```
+
+</details>
+
+Convert the blueprint to a wbWorkbook-class object:
+
+```{r}
+#| label: demo-workbook
+#| eval: true
+(workbook <- yamlsheets::convert_to_workbook(blueprint))
+```
+
+You can freely manipulate the `workbook` object with other {openxlsx2} functions.
+
+You can open a temporary copy of the workbook:
+
+```{r}
+#| label: demo-temp-open
+openxlsx2::wb_open(workbook)
+```
+
+Or write it to disk:
+
+```{r}
+#| label: demo-write
+temp_file <- tempfile(fileext = ".xlsx")
+openxlsx2::wb_save(workbook, temp_file)
+```
+
+## Related projects
+
+* [{a11ytables}](https://github.com/co-analysis/a11ytables) is an R package.
+* [{rapid.spreadsheets}](https://github.com/RAPID-ONS/rapid.spreadsheets) is an R package.
+* ['gptables'](https://github.com/best-practice-and-impact/gptables) is a Python package.
