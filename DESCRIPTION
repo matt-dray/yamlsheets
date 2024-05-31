@@ -7,8 +7,8 @@ Description: Generate spreadsheet publications that follow best-practice
     guidance from the UK government's Analysis Function Central Team, using a
     YAML 'blueprint' as the primary input.
 License: MIT + file LICENSE
-URL: https://github.com/co-analysis/yamlsheets
-BugReports: https://github.com/co-analysis/yamlsheets/issues
+URL: https://github.com/matt-dray/yamlsheets
+BugReports: https://github.com/matt-dray/yamlsheets/issues
 Imports: 
     cli,
     fs,
