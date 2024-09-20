@@ -7,43 +7,69 @@ output: github_document
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment = "#",
   fig.path = "man/figures/README-",
   out.width = "100%",
   eval = FALSE
 )
 ```
 
-# yamlsheets
+# {yamlsheets}
 
 <!-- badges: start -->
 [![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
 [![R-CMD-check](https://github.com/matt-dray/yamlsheets/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/matt-dray/yamlsheets/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Generate spreadsheet publications that follow [best-practice guidance from the UK government's Analysis Function](https://analysisfunction.civilservice.gov.uk/policy-store/releasing-statistics-in-spreadsheets/), using a [YAML](https://yaml.org/) text file 'blueprint' as the input.
+## Purpose
 
-This package is a work-in-progress concept and may never be completed or even reach a useful state.
+Generate spreadsheet publications that follow [best-practice guidance from the UK Government's Analysis Function](https://analysisfunction.civilservice.gov.uk/policy-store/releasing-statistics-in-spreadsheets/), using a [YAML](https://yaml.org/) text file 'blueprint' as the input.
+
+This package is a work-in-progress concept to experiment with new methods for [the {a11ytables} package](https://github.com/co-analysis/a11ytables). It may never be fully-featured or complete.
 
 ## Install
 
-Install from R Universe:
-
-```{r}
-#| label: install-r-universe
-install.packages("yamlsheets", repos = "https://matt-dray.r-universe.dev")
-```
-
-Or from GitHub via {remotes}:
+Install from GitHub via {remotes}:
 
 ```{r}
 #| label: install-github
 remotes::install_github("matt-dray/yamlsheets")
 ```
 
+## Quickstart
+
+The basic workflow for {yamlsheets} has three steps:
+
+1. Read a 'blueprint', which is a YAML text file containing all the information you need to create your output spreadsheet.
+2. Convert the resulting list object to an {openxlsx2} wbWorkbook-class object, which applies structure and styles.
+3. Write the workbook to disk.
+
+In code, that would look something like this:
+
+```{r}
+#| label: quickstart-steps
+read_blueprint("blueprint.yaml") |>  # pass in your YAML blueprint
+  convert_to_workbook() |>  # add structure and styles
+  openxlsx2::wb_save("spreadsheet.xlsx")  # write out to an xlsx file
+```
+
+You can run this code to see a demo in action:
+
+```{r}
+#| label: quickstart-demo
+system.file("extdata", "widgets.yaml", package = "yamlsheets") |>  # demo file
+  read_blueprint() |> 
+  convert_to_workbook() |> 
+  openxlsx2::wb_open()  # open a temporary copy
+```
+
 ## Approach
 
-Information and data to construct a spreadsheet are stored in a particularly-formatted YAML text file, called a 'blueprint'. There's a demo blueprint provided in the package:
+This section contains some greater depth about how {yamlsheets} works.
+
+### Blueprint files
+
+Information and data to construct a spreadsheet are stored in a particularly-formatted YAML text file, called a 'blueprint'. There's a demo blueprint file provided with the package:
 
 ```{r}
 #| label: demo-yaml-file
@@ -51,13 +77,21 @@ Information and data to construct a spreadsheet are stored in a particularly-for
 filepath <- system.file("extdata", "widgets.yaml", package = "yamlsheets")
 ```
 
-You can view the structure of this demo file by reading manually with `yaml::read_yaml(filepath, eval.expr = TRUE)`.
+<details><summary>Click to see the raw text content of the blueprint.</summary>
+
+```{r}
+#| label: demo-yaml-text
+#| eval: true
+cat(readLines(filepath), sep = "\n")
+```
+
+</details>
 
 <details><summary>Click to read an aside about executing R code in a YAML file.</summary>
 
-Note that you can pass data into the YAML file on read by pre-pending `!expr` to R code that will be executed on-read with the argument `eval.expr = TRUE`.
+You can read a YAML file with `yaml::read_yaml()`. With the argument `eval.expr = TRUE` you can execute R code on-read by pre-pending `!expr` to any lines of your YAML file that you want evaluated as R code. This could, for example, be used to read in data sets stored as CSV files.
 
-You can choose to do this using the `eval.expr` argument in `yaml::read_yaml()`:
+The demo blueprint in this package has the line `table: !expr read.csv(system.file("extdata", "widgets.csv", package = "yamlsheets"))`, which reads a demo CSV file that contains the data for Table 1. Let's see what happens when you choose to evaluate that line or not.
 
 ```{r}
 #| label: demo-yaml-read
@@ -84,26 +118,57 @@ yaml_evaluated$table_1$table
 
 </details>
 
-Read the blueprint  into a list:
+In short, each top-level key represents a sheet (`cover`, etc), with mandatory and arbitrary sub-sections for things like `sheet_title` and `table`. The idea is that these are validated by `read_blueprint()` and interpreted by `convert_to_worbook()` to build each sheet of the workbook.
+
+### Read a blueprint
+
+You can read in the yaml file with `yamlsheets::read_blueprint()`, which is a wrapper around `yaml::read_yaml()` with extra validity checks built in.
+
+Read the blueprint into a list:
 
 ```{r}
 #| label: demo-read-blueprint
 #| eval: true
-blueprint <- yamlsheets::read_blueprint(filepath)
+blueprint <- yamlsheets::read_blueprint(
+  yaml = filepath,
+  evaluate_r = TRUE,  # default
+  print_checks = TRUE  # default
+)
+```
+
+Note that there are arguments that let us execute R code in the YAML blueprint (`evaluate_r`) and also to print to the console the outcome of some validity checks (`print_checks`). The outcome of each check will appear with a tick or cross to show it has been passed or failed.
+
+Here's a quick preview of the blueprint's structure once it's been read in. You can see it's now a list with one element per sheet.
+
+```{r}
+#| label: demo-blueprint-str-1
+#| eval: true
 str(blueprint, 1)
 ```
 
 <details><summary>Click to see the full blueprint structure.</summary>
 
+Here's the full structure:
+
 ```{r}
-#| label: demo-blueprint-full
+#| label: demo-blueprint-str
 #| eval: true
 str(blueprint)
 ```
 
+And the full contents in list form:
+
+```{r}
+#| label: demo-blueprint-full
+#| eval: true
+blueprint
+```
+
 </details>
 
-Convert the blueprint to a wbWorkbook-class object:
+### Convert to a workbook
+
+Convert the blueprint list to a wbWorkbook-class object to add spreadsheet structure and style.
 
 ```{r}
 #| label: demo-workbook
@@ -111,9 +176,9 @@ Convert the blueprint to a wbWorkbook-class object:
 (workbook <- yamlsheets::convert_to_workbook(blueprint))
 ```
 
-You can freely manipulate the `workbook` object with other {openxlsx2} functions.
+You can freely manipulate the object with other {openxlsx2} functions if you have additional needs.
 
-You can open a temporary copy of the workbook:
+Finally, you can open a temporary copy of the workbook:
 
 ```{r}
 #| label: demo-temp-open
@@ -128,8 +193,24 @@ temp_file <- tempfile(fileext = ".xlsx")
 openxlsx2::wb_save(workbook, temp_file)
 ```
 
+## Comparison to {a11ytables}
+
+Improvements in {yamlsheets} compared to {a11ytables} include:
+
+* [{openxlsx2}](https://janmarvin.github.io/openxlsx2/) for the back-end, rather than [{openxlsx}](https://ycphs.github.io/openxlsx/index.html)
+* a plain-text 'blueprint' system as a simplified data-input interface (developing [Matt's suggestion](https://github.com/co-analysis/a11ytables/issues/65))
+* greater flexibility to provide arbitrary pre-table content
+* support for multiple tables per sheet
+* use of [{cli}](https://cli.r-lib.org/) and [{fs}](https://fs.r-lib.org/) for improved user interfaces and path-handling
+
 ## Related projects
 
-* [{a11ytables}](https://github.com/co-analysis/a11ytables) is an R package.
-* [{rapid.spreadsheets}](https://github.com/RAPID-ONS/rapid.spreadsheets) is an R package.
-* ['gptables'](https://github.com/best-practice-and-impact/gptables) is a Python package.
+Actively-used packages include:
+
+* [{a11ytables}](https://github.com/co-analysis/a11ytables) for R
+* [{rapid.spreadsheets}](https://github.com/RAPID-ONS/rapid.spreadsheets) for R
+* ['gptables'](https://github.com/best-practice-and-impact/gptables) for Python
+
+Another experimental project that builds on {a11ytables}:
+
+* [{a11ytables2}](https://github.com/matt-dray/a11ytables2) for R
