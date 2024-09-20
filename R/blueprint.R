@@ -8,9 +8,11 @@
 #'   valid blueprint for a compliant workbook.
 #' @param evaluate_r Logical. Evaluate R code provided in your YAML file?
 #'   Defaults to `TRUE`.
+#' @param print_checks Logical. Print the result of checks against best-practice
+#'  guidance? Defaults to `TRUE`.
 #'
-#' @details The YAML file must conform to a certain structure certain to be
-#'   considered valid.
+#' @details The YAML file must conform to a certain structure to be considered
+#'   valid.
 #'
 #'   R code can be inserted to the YAML file, prepended with `!expr`, and it
 #'   will be evaluated on read if `evaluate_r` is `TRUE`. It's expected that
@@ -27,9 +29,11 @@
 #' blueprint
 #'
 #' @export
-read_blueprint <- function(yaml, evaluate_r = TRUE) {
+read_blueprint <- function(yaml, evaluate_r = TRUE, print_checks = TRUE) {
   .check_read_blueprint(yaml, evaluate_r)
-  yaml::read_yaml(yaml, eval.expr = evaluate_r)
+  blueprint <- yaml::read_yaml(yaml, eval.expr = evaluate_r)
+  if (print_checks) .check_guidelines(blueprint)
+  blueprint
 }
 
 #' Check Input to 'read_blueprint' Function
@@ -77,5 +81,37 @@ read_blueprint <- function(yaml, evaluate_r = TRUE) {
   )
 
   if (!yaml_exists) cli::cli_abort(yaml_exists_msg)
+
+}
+
+.check_guidelines <- function(blueprint) {
+
+  sheet_names <- names(blueprint)
+
+  has_cover <- "cover" %in% sheet_names
+  has_contents <- "contents" %in% sheet_names
+  has_notes <- "notes" %in% sheet_names
+
+  cli::cli(
+    c(
+      .build_check_alert(has_cover, "Has cover sheet"),
+      .build_check_alert(has_contents, "Has content sheet"),
+      .build_check_alert(has_notes, "Has notes sheet", FALSE)
+    )
+  )
+
+}
+
+.build_check_alert <- function(check_result, message, required = TRUE) {
+
+  parenthetical <- if (required) "(required)" else "(optional)"
+  message <- paste(message, parenthetical)
+
+  if (check_result) cli::cli_alert_success(message)
+
+  if (!check_result) {
+    if (!required) return(cli::cli_ul(message))
+    cli::cli_alert_danger(message)
+  }
 
 }

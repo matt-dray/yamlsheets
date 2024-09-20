@@ -4,7 +4,7 @@
 \alias{read_blueprint}
 \title{Read a Blueprint YAML File}
 \usage{
-read_blueprint(yaml, evaluate_r = TRUE)
+read_blueprint(yaml, evaluate_r = TRUE, print_checks = TRUE)
 }
 \arguments{
 \item{yaml}{Character. A path to a YAML file (.yaml or .yml) that contains a
@@ -12,6 +12,9 @@ valid blueprint for a compliant workbook.}
 
 \item{evaluate_r}{Logical. Evaluate R code provided in your YAML file?
 Defaults to `TRUE`.}
+
+\item{print_checks}{Logical. Print the result of checks against best-practice
+guidance? Defaults to `TRUE`.}
 }
 \value{
 A nested list. The exact content and structure will depend on the
@@ -23,8 +26,8 @@ structure of a workbook compliant with the Analysis Function's best-practice
 spreadsheet guidelines.
 }
 \details{
-The YAML file must conform to a certain structure certain to be
-  considered valid.
+The YAML file must conform to a certain structure to be considered
+  valid.
 
   R code can be inserted to the YAML file, prepended with `!expr`, and it
   will be evaluated on read if `evaluate_r` is `TRUE`. It's expected that
