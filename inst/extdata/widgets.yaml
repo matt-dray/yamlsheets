@@ -22,6 +22,7 @@ table_1:
   table: !expr read.csv(system.file("extdata", "widgets.csv", package = "yamlsheets"))  # mandatory expected
 table_2:
   sheet_title: "Tables 2a and 2b: Widget quantity by geography"
+  sheet_subtitle: "Subtitle"
   source: The UK Widget Survey.
   tables:
     table_2a:
