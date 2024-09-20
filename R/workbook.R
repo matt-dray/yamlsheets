@@ -13,7 +13,7 @@
 #' blueprint <- read_blueprint(filepath)
 #'
 #' # Convert list to wbWorkbook-class object
-#' workbook <- convert_blueprint_to_workbook(blueprint)
+#' workbook <- convert_to_workbook(blueprint)
 #' workbook
 #'
 #' # openxlsx2::wb_open(workbook)  # to open temp version in spreadsheet editor
@@ -79,7 +79,7 @@ convert_to_workbook <- function(blueprint) {
 
   sheet_titles <- sapply(blueprint, function(.x) .x[["sheet_title"]])
   sheet_titles_table <- utils::stack(sheet_titles)[, c("ind", "values")]
-  names(sheet_titles_table) <- c("Tab title", "Sheet title")
+  names(sheet_titles_table) <- c("Tab name", "Sheet title")
 
   wb <- openxlsx2::wb_add_data_table(
     wb,
@@ -90,6 +90,33 @@ convert_to_workbook <- function(blueprint) {
     table_style = "none",
     with_filter = FALSE
   )
+
+  add_links <- sheet_content[["links"]]
+
+  if (add_links) {
+
+    tab_names <- as.character(sheet_titles_table[["Tab name"]])
+
+    for (i in seq_along(tab_names)) {
+
+      link <- openxlsx2::create_hyperlink(
+        sheet = tab_names[i],
+        row = 1,
+        col = 1,
+        text = tab_names[i]
+      )
+
+      wb <- openxlsx2::wb_add_formula(
+        wb,
+        sheet = "contents",
+        x = link,
+        start_col = 1,
+        start_row = i + 2  # TODO: make this dynamic given pre-table metadata
+      )
+
+    }
+
+  }
 
   wb
 

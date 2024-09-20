@@ -22,7 +22,7 @@ filepath <- system.file("extdata", "widgets.yaml", package = "yamlsheets")
 blueprint <- read_blueprint(filepath)
 
 # Convert list to wbWorkbook-class object
-workbook <- convert_blueprint_to_workbook(blueprint)
+workbook <- convert_to_workbook(blueprint)
 workbook
 
 # openxlsx2::wb_open(workbook)  # to open temp version in spreadsheet editor
